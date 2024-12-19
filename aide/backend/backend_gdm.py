@@ -3,9 +3,12 @@
 import time
 import logging
 import os
+import vertexai
 
 import google.api_core.exceptions
-import google.generativeai as genai
+# import google.generativeai as genai
+from vertexai.generative_models import GenerativeModel, GenerationConfig
+
 from google.generativeai.generative_models import generation_types
 
 from funcy import once
@@ -47,9 +50,9 @@ def _setup_gdm_client(model_name: str, temperature: float):
     global gdm_model
     global generation_config
 
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    gdm_model = genai.GenerativeModel(model_name)
-    generation_config = genai.GenerationConfig(temperature=temperature)
+    vertexai.init(project=os.environ["GCP_PROJECT"], location=os.environ["GCP_REGION"])
+    gdm_model = GenerativeModel(model_name)
+    generation_config = GenerationConfig(temperature=temperature)
 
 
 def query(

@@ -82,3 +82,4 @@ tqdm==4.66.2
 tqdm==4.66.2
 transformers==4.44.2
 xlrd==2.0.1
+vertexai==1.71.1
