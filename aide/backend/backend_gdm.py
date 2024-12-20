@@ -65,7 +65,7 @@ def query(
         # Since system messages aren't directly supported outside beta, 
         # you might want to treat them as user messages or skip.
         # Here we keep them as system role messages if supported.
-        messages.append(Content(role="system", parts=[Part.from_text(system_message)]))
+        messages.append(Content(role="user", parts=[Part.from_text(system_message)]))
     if user_message:
         messages.append(Content(role="user", parts=[Part.from_text(user_message)]))
 
