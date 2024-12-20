@@ -1,15 +1,11 @@
-"""Backend for GDM Gemini API"""
-
 import time
 import logging
 import os
 import vertexai
 
 import google.api_core.exceptions
-# import google.generativeai as genai
-from vertexai.generative_models import GenerativeModel, GenerationConfig
-from vertexai.generative_models import HarmBlockThreshold
-from vertexai.generative_models import HarmCategory
+from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part
+from vertexai.generative_models import HarmBlockThreshold, HarmCategory
 from google.generativeai.generative_models import generation_types
 
 from funcy import once
@@ -63,12 +59,15 @@ def query(
             "GDM supports function calling but we won't use it for now."
         )
 
-    # GDM gemini api doesnt support system messages outside of the beta
-    messages = [
-        {"role": "user", "parts": message}
-        for message in [system_message, user_message]
-        if message
-    ]
+    # Create a list of Content objects from the system and user messages
+    messages = []
+    if system_message:
+        # Since system messages aren't directly supported outside beta, 
+        # you might want to treat them as user messages or skip.
+        # Here we keep them as system role messages if supported.
+        messages.append(Content(role="system", parts=[Part.from_text(system_message)]))
+    if user_message:
+        messages.append(Content(role="user", parts=[Part.from_text(user_message)]))
 
     t0 = time.time()
     response: generation_types.GenerateContentResponse = backoff_create(
@@ -86,7 +85,6 @@ def query(
         output = response.text
     in_tokens = response.usage_metadata.prompt_token_count
     out_tokens = response.usage_metadata.candidates_token_count
-    info = {}  # this isnt used anywhere, but is an expected return value
+    info = {}  # this isn't used anywhere, but is an expected return value
 
-    # only `output` is actually used by scaffolding
     return output, req_time, in_tokens, out_tokens, info
