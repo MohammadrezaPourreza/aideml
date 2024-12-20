@@ -9,6 +9,7 @@ import google.api_core.exceptions
 # import google.generativeai as genai
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 from vertexai.generative_models import HarmBlockThreshold
+from vertexai.generative_models import HarmCategory
 from google.generativeai.generative_models import generation_types
 
 from funcy import once
