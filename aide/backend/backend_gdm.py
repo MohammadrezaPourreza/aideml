@@ -95,20 +95,22 @@ def query(
         if func_spec is None:
             output = response.text
         else:
-            logger.info(f"Function calls: {response}")
             assert (
-            response.candidates[0].function_calls
-        ), f"function_call is empty, it is not a function call: {response}"
-        assert (
-            response.candidates[0].function_calls[0].name == func_spec.name
-        ), "Function name mismatch"
-        try:
-            output = json.loads(response.candidates[0].function_calls[0].args)
-        except json.JSONDecodeError as e:
-            logger.error(
-                f"Error decoding the function arguments: {response.candidates[0].function_calls[0].args}"
-            )
-            raise e
+            response.candidates
+            ), f"function_call is empty, it is not a function call: {response}"
+            assert (
+                response.candidates[0].function_calls
+            ), f"function_call is empty, it is not a function call: {response}"
+            assert (
+                response.candidates[0].function_calls[0].name == func_spec.name
+            ), "Function name mismatch"
+            try:
+                output = json.loads(response.candidates[0].function_calls[0].args)
+            except json.JSONDecodeError as e:
+                logger.error(
+                    f"Error decoding the function arguments: {response.candidates[0].function_calls[0].args}"
+                )
+                raise e
     in_tokens = response.usage_metadata.prompt_token_count
     out_tokens = response.usage_metadata.candidates_token_count
     info = {}  # this isn't used anywhere, but is an expected return value
