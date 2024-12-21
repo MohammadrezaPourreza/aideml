@@ -95,6 +95,7 @@ def query(
         if func_spec is None:
             output = response.text
         else:
+            logger.info(f"Function calls: {response}")
             assert (
             response.candidates[0].function_calls
         ), f"function_call is empty, it is not a function call: {response}"
