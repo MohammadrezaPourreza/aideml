@@ -80,6 +80,14 @@ class FunctionSpec(DataClassJsonMixin):
             },
             "strict": True,
         }
+    
+    @property
+    def as_gemini_tool_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "parameters": self.json_schema,
+        }
 
     @property
     def openai_tool_choice_dict(self):

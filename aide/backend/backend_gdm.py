@@ -1,11 +1,12 @@
 import time
 import logging
 import os
+import json
 import vertexai
 
 import google.api_core.exceptions
-from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part
-from vertexai.generative_models import HarmBlockThreshold, HarmCategory
+from vertexai.generative_models import GenerativeModel, GenerationConfig, Content, Part, FunctionDeclaration, Tool
+from vertexai.generative_models import HarmBlockThreshold, HarmCategory, ToolConfig
 from google.generativeai.generative_models import generation_types
 
 from funcy import once
@@ -54,10 +55,17 @@ def query(
 
     _setup_gdm_client(model, temperature)
 
+    tools = []
+    tool_config = None
     if func_spec is not None:
-        raise NotImplementedError(
-            "GDM supports function calling but we won't use it for now."
+        tools = [Tool(function_declarations=[FunctionDeclaration(**func_spec.as_gemini_tool_dict)])]
+        tool_config = ToolConfig(
+            function_calling_config=ToolConfig.FunctionCallingConfig(
+                mode=ToolConfig.FunctionCallingConfig.Mode.ANY,
+                allowed_function_names=[func_spec.name],
+            )
         )
+
 
     # Create a list of Content objects from the system and user messages
     messages = []
@@ -75,6 +83,8 @@ def query(
         retry_exceptions=GDM_TIMEOUT_EXCEPTIONS,
         contents=messages,
         generation_config=generation_config,
+        tools=tools,
+        tool_config=tool_config,
         safety_settings=SAFETY_SETTINGS,
     )
     req_time = time.time() - t0
@@ -82,7 +92,22 @@ def query(
     if response.prompt_feedback.block_reason:
         output = str(response.prompt_feedback)
     else:
-        output = response.text
+        if func_spec is None:
+            output = response.text
+        else:
+            assert (
+            response.candidates[0].function_calls
+        ), f"function_call is empty, it is not a function call: {response}"
+        assert (
+            response.candidates[0].function_calls[0].name == func_spec.name
+        ), "Function name mismatch"
+        try:
+            output = json.loads(response.candidates[0].function_calls[0].args)
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"Error decoding the function arguments: {response.candidates[0].function_calls[0].args}"
+            )
+            raise e
     in_tokens = response.usage_metadata.prompt_token_count
     out_tokens = response.usage_metadata.candidates_token_count
     info = {}  # this isn't used anywhere, but is an expected return value
