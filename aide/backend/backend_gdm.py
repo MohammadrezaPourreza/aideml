@@ -105,7 +105,7 @@ def query(
                 response.candidates[0].function_calls[0].name == func_spec.name
             ), "Function name mismatch"
             try:
-                output = json.loads(response.candidates[0].function_calls[0].args)
+                output = response.candidates[0].function_calls[0].args
             except json.JSONDecodeError as e:
                 logger.error(
                     f"Error decoding the function arguments: {response.candidates[0].function_calls[0].args}"
